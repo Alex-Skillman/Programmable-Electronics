@@ -4,20 +4,21 @@
 int myFunction(int, int);
 
 int wait = 500;
+int LEDPIN = 13;
+int BUTTONPIN = 2;
 
 void setup() {
-  // put your setup code here, to run once:
-  pinMode(12, OUTPUT);
-  pinMode(2, INPUT_PULLUP);
+  pinMode(LEDPIN, OUTPUT);
+  pinMode(BUTTONPIN, INPUT_PULLUP);
 }
 
 void loop() {
   wait = 500;
-  if(digitalRead(2) == LOW) {
+  if(digitalRead(BUTTONPIN) == LOW) {
     wait = 100;
   }
-  digitalWrite(12, HIGH);
+  digitalWrite(LEDPIN, HIGH);
   delay(wait);
-  digitalWrite(12, LOW);
+  digitalWrite(LEDPIN, LOW);
   delay(wait);
 }
