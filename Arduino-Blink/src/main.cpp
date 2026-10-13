@@ -15,7 +15,7 @@ void setup() {
 void loop() {
   wait = 500;
   if(digitalRead(BUTTONPIN) == LOW) {
-    wait = 100;
+    wait = 50;
   }
   digitalWrite(LEDPIN, HIGH);
   delay(wait);
