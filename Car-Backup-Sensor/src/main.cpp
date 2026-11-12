@@ -23,64 +23,60 @@ int const GREENLEDPIN = 8;
 int const YELLOWLEDPIN = 9;
 int const REDLEDPIN = 10;
 
-// Pins for the speaker
+// Pin for the speaker
 int const SPEAKER = 7;
 
 // Variables for distance and duration
 long duration;
 float distance;
 
-// Function that reads the distance from the ultrasonic sensor 
-long readDistance() {
-  // Clear the DISTANCETRIG first for a clean pulse
+// Function that reads the distance from the ultrasonic sensor (changed to float)
+float readDistance() {
   digitalWrite(TRIG, LOW);
   delayMicroseconds(2);
   
-  // Trigger the sensor to find the time in microseconds
   digitalWrite(TRIG, HIGH);
   delayMicroseconds(10);
   digitalWrite(TRIG, LOW);
 
-  // Read the pin and find the time in microseconds the sound wave took
-  duration = pulseIn(ECHO, HIGH, 30000); // 30ms timeout prevents freezing if no echo
-
-  // Calculate the distance
-  distance = duration * 0.0344 / 2;
+  duration = pulseIn(ECHO, HIGH, 30000); // 30ms timeout prevents freezing
+  float dist = duration * 0.0344 / 2.0;
   
-  // Handle out-of-range sensor readings (pulseIn returns 0 on timeout)
-  if (distance == 0) {
-    distance = 999; 
+  // Handle out-of-range sensor readings
+  if (dist == 0) {
+    dist = 999; 
   }
 
   Serial.print("Distance: ");
-  Serial.println(distance);
+  Serial.println(dist);
 
-  // Return the distance in cm
-  return distance;
+  return dist;
 }
 
 // Find the current state of the robot
-void findState(float distance) {
-  if (distance > 100) {
+void findState(float dist) {
+  if (dist > 100) {
     currentState = State::NotVisible;
-  } if (distance > 50) {
+  } else if (dist > 50) {
     currentState = State::Far;
-  } if (distance > 25) {
+  } else if (dist > 25) {
     currentState = State::Close;
   } else {
     currentState = State::Stop;
   }
 }
 
-// Flash Leds a certain time per second
-void flashLED(int flashPerSecond, int LEDPIN) {
-  // Set the amount of delay
-  float modifiedDelay = round(500/flashPerSecond);
+// Pulse LED and Speaker simultaneously
+void alertPulse(int pulsesPerSecond, int ledPin, int toneFrequency, int speakerPin) {
+  int modifiedDelay = round(500.0 / pulsesPerSecond);
 
-  for (int i = 0; i < flashPerSecond; i++) {
-    pinMode(LEDPIN, HIGH);
+  for (int i = 0; i < pulsesPerSecond; i++) {
+    digitalWrite(ledPin, HIGH);
+    tone(speakerPin, toneFrequency);
     delay(modifiedDelay);
-    pinMode(LEDPIN, LOW);
+
+    digitalWrite(ledPin, LOW);
+    noTone(speakerPin);
     delay(modifiedDelay);
   }
 }
@@ -94,22 +90,46 @@ void setup() {
   pinMode(GREENLEDPIN, OUTPUT);
   pinMode(YELLOWLEDPIN, OUTPUT);
   pinMode(REDLEDPIN, OUTPUT);
+
+  // Configure the speaker pin
+  pinMode(SPEAKER, OUTPUT);
+
+  // Configure serial
+  Serial.begin(9600);
 }
 
 void loop() {
-  // Read distance
   distance = readDistance();
-  // Find the current state of the build
   findState(distance);
 
-  // Handles the logic for what the tone and everything will do
   switch(currentState) {
-    case::State::NotVisible:
+    case State::NotVisible: {
+      digitalWrite(GREENLEDPIN, LOW);
+      digitalWrite(YELLOWLEDPIN, LOW); // Fixed typo (was GREENLEDPIN)
+      digitalWrite(REDLEDPIN, LOW);
+      noTone(SPEAKER);
+      delay(50); // Short delay to prevent ultrasonic echo interference
       break;
-    case::State::Far:
-      
-    case::State::Close:
-
-    case::State::Stop:
+    }
+    case State::Far: {
+      digitalWrite(YELLOWLEDPIN, LOW);
+      digitalWrite(REDLEDPIN, LOW);
+      alertPulse(1, GREENLEDPIN, 500, SPEAKER);
+      break;
+    }      
+    case State::Close: {
+      digitalWrite(GREENLEDPIN, LOW);
+      digitalWrite(REDLEDPIN, LOW);
+      alertPulse(3, YELLOWLEDPIN, 800, SPEAKER);
+      break;
+    }
+    case State::Stop: {
+      digitalWrite(GREENLEDPIN, LOW);
+      digitalWrite(YELLOWLEDPIN, LOW);
+      digitalWrite(REDLEDPIN, HIGH);
+      tone(SPEAKER, 1500);
+      delay(50); // Short delay to prevent ultrasonic echo interference
+      break;
+    }
   }
 }
