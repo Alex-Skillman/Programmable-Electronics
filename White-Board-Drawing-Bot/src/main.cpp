@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
+#include <MultiStepper.h>
 
 // Used to set it up for the type of driver we are using
 #define DRIVER_INTERFACE 1
@@ -14,6 +15,12 @@ const int DIR_PIN_2 = 14;
 // Create the stepper motor instances
 AccelStepper stepper_1(DRIVER_INTERFACE, STEP_PIN_1, DIR_PIN_1);
 AccelStepper stepper_2(DRIVER_INTERFACE, STEP_PIN_2, DIR_PIN_2);
+
+// Joins both steppers into a multistepper
+MultiStepper steppers;
+
+// Create a variable to hold the amount of steps for each motor
+long positions[2];
 
 void setup() {
     // Max Speed for the steppers - steps/s
