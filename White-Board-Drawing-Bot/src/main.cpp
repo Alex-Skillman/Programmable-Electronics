@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <AccelStepper.h>
 #include <MultiStepper.h>
+#include <FastEspnow.h>
 
 // Used to set it up for the type of driver we are using
 #define DRIVER_INTERFACE 1
